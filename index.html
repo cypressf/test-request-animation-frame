@@ -19,13 +19,13 @@
 
 
 <h3>Time</h3>
-<div id=debug-time></div>
+<div id=debugTime></div>
 
 <h3>Positions</h3>
-<table id=debug-positions></table>
+<table id=debugPositions></table>
 
 <h3>Velocities</h3>
-<table id=debug-velocities></table>
+<table id=debugVelocities></table>
 
 <script> // @ts-check
     /**
@@ -34,24 +34,21 @@
      * @property {number} y
      */
 
-    // pixels
+    // Initial state
     const positions = [
         { x: 400, y: 600 },
-        { x: 300, y: 700 },
-        { x: 250, y: 300 },
+        { x: 600, y: 400 },
+        { x: 350, y: 300 },
     ]
-
-    // pixels per second
     const velocities = [
         { x: 0, y: 0 },
         { x: 10, y: 10 },
-        { x: 200, y: -200 }
+        { x: 20, y: -20 }
     ]
-
-    const masses = [2000, 20, 10]
-
+    const masses = [20, 20, 10]
     const numItems = positions.length
 
+    // DOM
     let domNodes = []
     for (let i = 0; i < numItems; i++) {
         const div = document.createElement("div")
@@ -60,13 +57,8 @@
         domNodes[i] = div
     }
 
-    const debugTime = document.querySelector("#debug-time")
-    const debugPositions = document.querySelector("#debug-positions")
-    const debugVelocities = document.querySelector("#debug-velocities")
-    if (!debugTime || !debugPositions || !debugVelocities) throw Error()
-
+    // Helper functions
     const round = Intl.NumberFormat("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })
-
     const prettyPositions = (/** @type {Position[]} */ positions) => {
         let output = ""
         for (let i = 0; i < numItems; i++) {
@@ -75,17 +67,18 @@
         return output
     }
 
+    // Animation function
     let prevTime = 0
-
     const animate = time => {
         const delta = (time - prevTime) / 1000
         prevTime = time
 
         for (let i = 0; i < numItems; i++) {
 
-            // Add the forces exerted by all the other items to the velocity
+            // Add the forces to velocity
             for (let j = 0; j < numItems; j++) {
                 if (i === j) continue
+
                 const xDelta = positions[j].x - positions[i].x
                 const yDelta = positions[j].y - positions[i].y
                 const distance = Math.sqrt(xDelta ** 2 + yDelta ** 2)
@@ -96,19 +89,23 @@
                 velocities[i].y += direction.y * delta * attraction / distance / masses[i]
             }
 
-            // Add the velocity to the position
+            // Add the velocity to position
             positions[i].x += delta * velocities[i].x
             positions[i].y += delta * velocities[i].y
         }
 
+        // @ts-ignore
         debugTime.innerHTML = time
+        // @ts-ignore
         debugPositions.innerHTML = prettyPositions(positions)
+        // @ts-ignore
         debugVelocities.innerHTML = prettyPositions(velocities)
 
         for (let i = 0; i < numItems; i++) {
             domNodes[i].style.left = `${positions[i].x}px`
             domNodes[i].style.top = `${positions[i].y}px`
         }
+
         requestAnimationFrame(animate)
     }
 
