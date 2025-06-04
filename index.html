@@ -27,6 +27,9 @@
 <h3>Velocities</h3>
 <table id=debugVelocities></table>
 
+<h3>Click</h3>
+<table id=debugClicks></table>
+
 <script> // @ts-check
     /**
      * @typedef {Object} Position
@@ -46,26 +49,47 @@
         { x: 20, y: -20 }
     ]
     const masses = [20, 20, 10]
-    const numItems = positions.length
 
-    // DOM
-    let domNodes = []
-    for (let i = 0; i < numItems; i++) {
-        const div = document.createElement("div")
-        div.className = 'item'
-        document.body.append(div)
-        domNodes[i] = div
-    }
 
     // Helper functions
     const round = Intl.NumberFormat("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })
-    const prettyPositions = (/** @type {Position[]} */ positions) => {
+    const formatPositions = (/** @type {Position[]} */ positions) => {
         let output = ""
-        for (let i = 0; i < numItems; i++) {
-            output += `<tr><td>${round.format(positions[i].x)}</td><td>${round.format(positions[i].y)}</td></tr>`
+        for (const position of positions) {
+            output += `<tr>
+                <td>${round.format(position.x)}</td>
+                <td>${round.format(position.y)}</td>
+            </tr>`
         }
         return output
     }
+
+    // DOM
+    /** @type {HTMLDivElement[]} */
+    const domNodes = []
+    const addDomNode = () => {
+        const div = document.createElement("div")
+        div.className = 'item'
+        document.body.append(div)
+        domNodes.push(div)
+    }
+    for (let i = 0; i < positions.length; i++) {
+        addDomNode()
+    }
+
+    const addItem = (/** @type {Position} */ position) => {
+        velocities.push({ x: 0, y: 0 })
+        positions.push(position)
+        masses.push(Math.random() * 200)
+        addDomNode()
+    }
+
+    document.addEventListener("click", event => {
+        const position = { x: event.pageX, y: event.pageY }
+        //@ts-ignore
+        debugClicks.innerHTML = formatPositions([position])
+        addItem(position)
+    })
 
     // Animation function
     let prevTime = 0
@@ -73,10 +97,10 @@
         const delta = (time - prevTime) / 1000
         prevTime = time
 
-        for (let i = 0; i < numItems; i++) {
+        for (let i = 0; i < positions.length; i++) {
 
             // Add the forces to velocity
-            for (let j = 0; j < numItems; j++) {
+            for (let j = 0; j < positions.length; j++) {
                 if (i === j) continue
 
                 const xDelta = positions[j].x - positions[i].x
@@ -97,11 +121,11 @@
         // @ts-ignore
         debugTime.innerHTML = time
         // @ts-ignore
-        debugPositions.innerHTML = prettyPositions(positions)
+        debugPositions.innerHTML = formatPositions(positions)
         // @ts-ignore
-        debugVelocities.innerHTML = prettyPositions(velocities)
+        debugVelocities.innerHTML = formatPositions(velocities)
 
-        for (let i = 0; i < numItems; i++) {
+        for (let i = 0; i < positions.length; i++) {
             domNodes[i].style.left = `${positions[i].x}px`
             domNodes[i].style.top = `${positions[i].y}px`
         }
