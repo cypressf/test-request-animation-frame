@@ -4,31 +4,102 @@
 <meta name="color-scheme" content="light dark">
 
 <style>
-    div {
+    .item {
         position: absolute;
         background-color: gray;
         width: 10px;
         height: 10px;
+        border-radius: 5px;
+    }
+
+    h3 {
+        margin: 1em 0 0
     }
 </style>
 
-<div />
 
-<script>
-    // @ts-check
-    const box = document.querySelector("div")
-    if (!box) throw Error()
+<h3>Time</h3>
+<div id=debug-time></div>
 
-    let x = 0
-    let y = 0
+<h3>Positions</h3>
+<table id=debug-positions></table>
 
-    const animateBox = (timestamp) => {
-        x = 200 + Math.sin(timestamp / 400) * 100
-        y = 200 + Math.cos(timestamp / 400) * 100
-        box.style.left = `${x}px`
-        box.style.top = `${y}px`
-        requestAnimationFrame(animateBox)
+<h3>Velocities</h3>
+<table id=debug-velocities></table>
+
+<script> // @ts-check
+    /**
+     * @typedef {Object} Position
+     * @property {number} x
+     * @property {number} y
+     */
+
+    // pixels
+    const positions = [
+        { x: 100, y: 100 },
+        { x: 200, y: 200 },
+    ]
+
+    // pixels per second
+    const velocities = [
+        { x: 4, y: 2 },
+        { x: 0, y: 0 }
+    ]
+
+    const numItems = positions.length
+
+    let domNodes = []
+    for (let i = 0; i < numItems; i++) {
+        const div = document.createElement("div")
+        div.className = 'item'
+        document.body.append(div)
+        domNodes[i] = div
     }
 
-    animateBox()
+    const debugTime = document.querySelector("#debug-time")
+    const debugPositions = document.querySelector("#debug-positions")
+    const debugVelocities = document.querySelector("#debug-velocities")
+    if (!debugTime || !debugPositions || !debugVelocities) throw Error()
+
+    const round = Intl.NumberFormat("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+
+    const prettyPositions = (/** @type {Position[]} */ positions) => {
+        let output = ""
+        for (let i = 0; i < numItems; i++) {
+            output += `<tr><td>${round.format(positions[i].x)}</td><td>${round.format(positions[i].y)}</td></tr>`
+        }
+        return output
+    }
+
+    let prevTime = 0
+
+    const animate = time => {
+        const delta = (time - prevTime) / 1000
+        prevTime = time
+
+        const xDelta = positions[1].x - positions[0].x
+        const yDelta = positions[1].y - positions[0].y
+        const distance = Math.sqrt(xDelta ** 2 + yDelta ** 2)
+        const direction = { x: xDelta, y: yDelta }
+        velocities[0].x += direction.x * delta / distance
+        velocities[0].y += direction.y * delta / distance
+
+
+        for (let i = 0; i < numItems; i++) {
+            positions[i].x += delta * velocities[i].x
+            positions[i].y += delta * velocities[i].y
+        }
+
+        debugTime.innerHTML = time
+        debugPositions.innerHTML = prettyPositions(positions)
+        debugVelocities.innerHTML = prettyPositions(velocities)
+
+        for (let i = 0; i < numItems; i++) {
+            domNodes[i].style.left = `${positions[i].x}px`
+            domNodes[i].style.top = `${positions[i].y}px`
+        }
+        requestAnimationFrame(animate)
+    }
+
+    animate(0)
 </script>
