@@ -36,15 +36,19 @@
 
     // pixels
     const positions = [
-        { x: 100, y: 100 },
-        { x: 200, y: 200 },
+        { x: 400, y: 600 },
+        { x: 300, y: 700 },
+        { x: 250, y: 300 },
     ]
 
     // pixels per second
     const velocities = [
-        { x: 4, y: 2 },
-        { x: 0, y: 0 }
+        { x: 0, y: 0 },
+        { x: 10, y: 10 },
+        { x: 200, y: -200 }
     ]
+
+    const masses = [2000, 20, 10]
 
     const numItems = positions.length
 
@@ -77,15 +81,22 @@
         const delta = (time - prevTime) / 1000
         prevTime = time
 
-        const xDelta = positions[1].x - positions[0].x
-        const yDelta = positions[1].y - positions[0].y
-        const distance = Math.sqrt(xDelta ** 2 + yDelta ** 2)
-        const direction = { x: xDelta, y: yDelta }
-        velocities[0].x += direction.x * delta / distance
-        velocities[0].y += direction.y * delta / distance
-
-
         for (let i = 0; i < numItems; i++) {
+
+            // Add the forces exerted by all the other items to the velocity
+            for (let j = 0; j < numItems; j++) {
+                if (i === j) continue
+                const xDelta = positions[j].x - positions[i].x
+                const yDelta = positions[j].y - positions[i].y
+                const distance = Math.sqrt(xDelta ** 2 + yDelta ** 2)
+                const attraction = masses[j] + masses[i]
+                const direction = { x: xDelta, y: yDelta }
+
+                velocities[i].x += direction.x * delta * attraction / distance / masses[i]
+                velocities[i].y += direction.y * delta * attraction / distance / masses[i]
+            }
+
+            // Add the velocity to the position
             positions[i].x += delta * velocities[i].x
             positions[i].y += delta * velocities[i].y
         }
