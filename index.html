@@ -132,8 +132,11 @@
         addDomNode()
     }
 
+    const debugToggle = document.querySelector("summary")
+    if (!debugToggle) throw new Error()
+
     document.addEventListener("click", event => {
-        if (event.target !== document.documentElement && event.target !== document.body) return
+        if (event.target === debugToggle) return
         const position = { x: event.pageX, y: event.pageY }
         //@ts-ignore
         debugClicks.innerHTML = formatVectors([position])
