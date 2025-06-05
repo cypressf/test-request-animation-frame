@@ -13,22 +13,37 @@
     }
 
     h3 {
-        margin: 1em 0 0
+        font-size: 1em;
+        margin: 1em 0 0;
+    }
+
+    table {
+        width: 100%;
+    }
+
+    td {
+        text-align: end;
+    }
+
+    #debugPanel {
+        display: none;
+        min-width: 120px;
+        width: fit-content;
     }
 </style>
 
+<label>Show debug info <input type="checkbox"></label>
+<div id=debugPanel>
+    <h3>Time</h3>
+    <div id=debugTime></div>
+    <h3>Click</h3>
+    <table id=debugClicks></table>
+    <h3>Positions</h3>
+    <table id=debugPositions></table>
+    <h3>Velocities</h3>
+    <table id=debugVelocities></table>
+</div>
 
-<h3>Time</h3>
-<div id=debugTime></div>
-
-<h3>Positions</h3>
-<table id=debugPositions></table>
-
-<h3>Velocities</h3>
-<table id=debugVelocities></table>
-
-<h3>Click</h3>
-<table id=debugClicks></table>
 
 <script> // @ts-check
     /**
@@ -52,7 +67,7 @@
 
 
     // Helper functions
-    const round = Intl.NumberFormat("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+    const round = Intl.NumberFormat("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 })
     const formatPositions = (/** @type {Position[]} */ positions) => {
         let output = ""
         for (const position of positions) {
@@ -85,10 +100,20 @@
     }
 
     document.addEventListener("click", event => {
+        if (event.target !== document.documentElement && event.target !== document.body) return
         const position = { x: event.pageX, y: event.pageY }
         //@ts-ignore
         debugClicks.innerHTML = formatPositions([position])
         addItem(position)
+    })
+
+    const debugCheckbox = document.querySelector("input")
+    if (!debugCheckbox) throw Error();
+    debugCheckbox.addEventListener("change", event => {
+        //@ts-ignore
+        if (debugCheckbox.checked) debugPanel.style.display = "block"
+        //@ts-ignore
+        else debugPanel.style.display = "none"
     })
 
     // Animation function
