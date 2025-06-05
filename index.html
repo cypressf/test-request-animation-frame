@@ -4,6 +4,10 @@
 <meta name="color-scheme" content="light dark">
 
 <style>
+    body {
+        margin: 0;
+    }
+
     .item {
         position: absolute;
         background-color: CanvasText;
@@ -12,28 +16,49 @@
         border-radius: 5px;
     }
 
+    p {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        user-select: none;
+        color: gray;
+    }
+
     h3 {
         font-size: 1em;
         margin: 1em 0 0;
     }
 
+    details {
+        width: fit-content;
+        max-height: 100vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        padding: 10px;
+    }
+
     table {
-        width: 100%;
+        border-spacing: 10px 0px;
+        min-width: 130px;
     }
 
     td {
         text-align: end;
     }
 
-    #debugPanel {
-        display: none;
-        min-width: 120px;
-        width: fit-content;
+    summary {
+        cursor: pointer;
+        user-select: none;
     }
 </style>
 
-<label>Show debug info <input type="checkbox"></label>
-<div id=debugPanel>
+
+<p>click to add a mass</p>
+
+<details>
+    <summary>Debug info</summary>
     <h3>Time</h3>
     <div id=debugTime></div>
     <h3>Click</h3>
@@ -42,12 +67,13 @@
     <table id=debugPositions></table>
     <h3>Velocities</h3>
     <table id=debugVelocities></table>
-</div>
-
+    <h3>Masses</h3>
+    <table id=debugMasses></table>
+</details>
 
 <script> // @ts-check
     /**
-     * @typedef {Object} Position
+     * @typedef {Object} Vector
      * @property {number} x
      * @property {number} y
      */
@@ -68,13 +94,20 @@
 
     // Helper functions
     const round = Intl.NumberFormat("en-US", { maximumFractionDigits: 1, minimumFractionDigits: 1 })
-    const formatPositions = (/** @type {Position[]} */ positions) => {
+    const formatVectors = (/** @type {Vector[]} */ vectors) => {
         let output = ""
-        for (const position of positions) {
+        for (const vector of vectors) {
             output += `<tr>
-                <td>${round.format(position.x)}</td>
-                <td>${round.format(position.y)}</td>
+                <td>${round.format(vector.x)}</td>
+                <td>${round.format(vector.y)}</td>
             </tr>`
+        }
+        return output
+    }
+    const formatScalars = (/** @type {number[]} */ scalars) => {
+        let output = ""
+        for (const scalar of scalars) {
+            output += `<tr><td>${round.format(scalar)}</td></tr>`
         }
         return output
     }
@@ -92,7 +125,7 @@
         addDomNode()
     }
 
-    const addItem = (/** @type {Position} */ position) => {
+    const addItem = (/** @type {Vector} */ position) => {
         velocities.push({ x: 0, y: 0 })
         positions.push(position)
         masses.push(Math.random() * 200)
@@ -103,18 +136,10 @@
         if (event.target !== document.documentElement && event.target !== document.body) return
         const position = { x: event.pageX, y: event.pageY }
         //@ts-ignore
-        debugClicks.innerHTML = formatPositions([position])
+        debugClicks.innerHTML = formatVectors([position])
         addItem(position)
     })
 
-    const debugCheckbox = document.querySelector("input")
-    if (!debugCheckbox) throw Error();
-    debugCheckbox.addEventListener("change", event => {
-        //@ts-ignore
-        if (debugCheckbox.checked) debugPanel.style.display = "block"
-        //@ts-ignore
-        else debugPanel.style.display = "none"
-    })
 
     // Animation function
     let prevTime = 0
@@ -146,9 +171,11 @@
         // @ts-ignore
         debugTime.innerHTML = time
         // @ts-ignore
-        debugPositions.innerHTML = formatPositions(positions)
+        debugPositions.innerHTML = formatVectors(positions)
         // @ts-ignore
-        debugVelocities.innerHTML = formatPositions(velocities)
+        debugVelocities.innerHTML = formatVectors(velocities)
+        // @ts-ignore
+        debugMasses.innerHTML = formatScalars(masses)
 
         for (let i = 0; i < positions.length; i++) {
             domNodes[i].style.left = `${positions[i].x}px`
