@@ -13,7 +13,7 @@
 
 /** @type {(Planet | "tombstone")[]} */
 const planets = [
-    { position: { x: 200, y: 200 }, velocity: { x: 0, y: 0 }, mass: 40 },
+    { position: { x: 200, y: 200 }, velocity: { x: 0, y: 0 }, mass: 40, },
     { position: { x: 201, y: 201 }, velocity: { x: 10, y: 10 }, mass: 20 },
 ]
 
@@ -57,7 +57,7 @@ const addPlanet = (/** @type {Vector} */ position) => {
     planets.push({
         position,
         velocity: { x: 0, y: 0 },
-        mass: Math.random() * 200,
+        mass: Math.random() * 2000,
     })
     addDomNode()
 }
@@ -106,16 +106,15 @@ const animate = (/** @type {number} */ time) => {
             if (distance <= collisionDistance) {
                 // Collision detected, combine the planets' masses, velocities, and positions
                 const combinedMass = p1.mass + p2.mass
-                p1.velocity.x =
-                    (p1.velocity.x * p1.mass +
-                        p2.velocity.x * p2.mass) /
-                    combinedMass
-                p1.velocity.y =
-                    (p1.velocity.y * p1.mass +
-                        p2.velocity.y * p2.mass) /
-                    combinedMass
-                p1.mass = combinedMass
-                planets[j] = "tombstone" // Mark for removal
+                const combinedVelocityX = (p1.velocity.x * p1.mass + p2.velocity.x * p2.mass) / combinedMass
+                const combinedVelocityY = (p1.velocity.y * p1.mass + p2.velocity.y * p2.mass) / combinedMass
+
+                const [toRemove, toKeep] = p1.mass > p2.mass ? [j, i] : [i, j]
+                planets[toKeep].velocity.x = combinedVelocityX
+                planets[toKeep].velocity.y = combinedVelocityY
+                planets[toKeep].mass = combinedMass
+                planets[toRemove] = "tombstone"
+
             } else {
                 // No collision, planets influence each other via gravity
                 const attraction = p1.mass + p2.mass
@@ -132,11 +131,12 @@ const animate = (/** @type {number} */ time) => {
         p1.position.x += delta * p1.velocity.x
         p1.position.y += delta * p1.velocity.y
 
-        const radius = Math.sqrt(p1.mass)
-        domNodes[i].style.left = `${p1.position.x}px`
-        domNodes[i].style.top = `${p1.position.y}px`
-        domNodes[i].style.width = `${radius}px`
-        domNodes[i].style.height = `${radius}px`
+        const diameter = Math.sqrt(p1.mass)
+        const radius = diameter / 2
+        domNodes[i].style.left = `${p1.position.x - radius}px`
+        domNodes[i].style.top = `${p1.position.y - radius}px`
+        domNodes[i].style.width = `${diameter}px`
+        domNodes[i].style.height = `${diameter}px`
         domNodes[i].style.borderRadius = `${radius}px`
     }
 
