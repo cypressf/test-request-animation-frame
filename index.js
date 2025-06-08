@@ -16,7 +16,7 @@
 // Create a large sun in the center
 const centerX = 400;
 const centerY = 400;
-const sunMass = 500;
+const sunMass = 5000;
 
 /** @type {(Planet | "tombstone")[]} */
 const planets = [{
@@ -29,25 +29,25 @@ const planets = [{
 // Create 100 smaller orbiting bodies
 for (let i = 0; i < 100; i++) {
     // Random distance from the sun (not too close, not too far)
-    const distance = 80 + Math.random() * 250;
+    const distance = 80 + Math.random() * 250
 
     // Random angle around the sun
-    const angle = Math.random() * Math.PI * 2;
+    const angle = Math.random() * Math.PI * 2
 
     // Calculate position based on angle and distance
-    const x = centerX + Math.cos(angle) * distance;
-    const y = centerY + Math.sin(angle) * distance;
+    const x = centerX + Math.cos(angle) * distance
+    const y = centerY + Math.sin(angle) * distance
 
     // Calculate orbital velocity (perpendicular to the position vector)
     // We use sqrt(sunMass / distance) to approximate Kepler's laws
-    const speed = Math.sqrt(sunMass / distance) * 70;
+    const speed = Math.sqrt(sunMass / distance) * 300
 
     // Velocity perpendicular to position vector (for circular orbit)
-    const vx = Math.sin(angle) * speed;
-    const vy = -Math.cos(angle) * speed;
+    const vx = Math.sin(angle) * speed
+    const vy = -Math.cos(angle) * speed
 
     // Random small mass
-    const mass = 2 + Math.random() * 18;
+    const mass = 2 + Math.random() * 10
 
     planets.push({
         position: { x, y },
@@ -123,7 +123,7 @@ const COLLISION_DISTANCE = 1
 // Animation function
 let prevTime = 0
 const animate = (/** @type {number} */ time) => {
-    const delta = (time - prevTime) / 1000
+    const delta = (time - prevTime) / 4000
     prevTime = time
 
     for (let i = 0; i < planets.length; i++) {
@@ -148,15 +148,20 @@ const animate = (/** @type {number} */ time) => {
                 const combinedVelocityX = (p1.velocity.x * p1.mass + p2.velocity.x * p2.mass) / combinedMass
                 const combinedVelocityY = (p1.velocity.y * p1.mass + p2.velocity.y * p2.mass) / combinedMass
 
-                const [toRemove, toKeep] = p1.mass > p2.mass ? [j, i] : [i, j]
-                planets[toKeep].velocity.x = combinedVelocityX
-                planets[toKeep].velocity.y = combinedVelocityY
-                planets[toKeep].mass = combinedMass
-                planets[toRemove] = "tombstone"
-
+                if (p1.mass > p2.mass) {
+                    p1.velocity.x = combinedVelocityX
+                    p1.velocity.y = combinedVelocityY
+                    p1.mass = combinedMass
+                    planets[j] = "tombstone"
+                } else {
+                    p2.velocity.x = combinedVelocityX
+                    p2.velocity.y = combinedVelocityY
+                    p2.mass = combinedMass
+                    planets[i] = "tombstone"
+                }
             } else {
                 // No collision, planets influence each other via gravity
-                const attraction = p1.mass + p2.mass
+                const attraction = p1.mass * p2.mass
                 const direction = { x: xDelta, y: yDelta }
 
                 p1.velocity.x +=
