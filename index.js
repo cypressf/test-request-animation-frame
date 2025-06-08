@@ -11,11 +11,50 @@
  * @property {number} mass
  */
 
+
+
+// Create a large sun in the center
+const centerX = 400;
+const centerY = 400;
+const sunMass = 500;
+
 /** @type {(Planet | "tombstone")[]} */
-const planets = [
-    { position: { x: 200, y: 200 }, velocity: { x: 0, y: 0 }, mass: 40, },
-    { position: { x: 201, y: 201 }, velocity: { x: 10, y: 10 }, mass: 20 },
-]
+const planets = [{
+    position: { x: centerX, y: centerY },
+    velocity: { x: 0, y: 0 },
+    mass: sunMass
+}];
+
+
+// Create 100 smaller orbiting bodies
+for (let i = 0; i < 100; i++) {
+    // Random distance from the sun (not too close, not too far)
+    const distance = 80 + Math.random() * 250;
+
+    // Random angle around the sun
+    const angle = Math.random() * Math.PI * 2;
+
+    // Calculate position based on angle and distance
+    const x = centerX + Math.cos(angle) * distance;
+    const y = centerY + Math.sin(angle) * distance;
+
+    // Calculate orbital velocity (perpendicular to the position vector)
+    // We use sqrt(sunMass / distance) to approximate Kepler's laws
+    const speed = Math.sqrt(sunMass / distance) * 70;
+
+    // Velocity perpendicular to position vector (for circular orbit)
+    const vx = Math.sin(angle) * speed;
+    const vy = -Math.cos(angle) * speed;
+
+    // Random small mass
+    const mass = 2 + Math.random() * 18;
+
+    planets.push({
+        position: { x, y },
+        velocity: { x: vx, y: vy },
+        mass
+    });
+}
 
 // Helper functions
 const round = Intl.NumberFormat("en-US", {
@@ -56,8 +95,8 @@ for (let i = 0; i < planets.length; i++) {
 const addPlanet = (/** @type {Vector} */ position) => {
     planets.push({
         position,
-        velocity: { x: 0, y: 0 },
-        mass: Math.random() * 2000,
+        velocity: { x: (Math.random() - 0.5) * 200, y: (Math.random() - 0.5) * 200 },
+        mass: Math.random() * 200,
     })
     addDomNode()
 }
