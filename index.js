@@ -13,9 +13,8 @@
 
 /** @type {(Planet | "tombstone")[]} */
 const planets = [
-    { position: { x: 400, y: 600 }, velocity: { x: 0, y: 0 }, mass: 20 },
-    { position: { x: 600, y: 400 }, velocity: { x: 10, y: 10 }, mass: 20 },
-    { position: { x: 350, y: 300 }, velocity: { x: 20, y: -20 }, mass: 20 },
+    { position: { x: 200, y: 200 }, velocity: { x: 0, y: 0 }, mass: 40 },
+    { position: { x: 201, y: 201 }, velocity: { x: 10, y: 10 }, mass: 20 },
 ]
 
 // Helper functions
@@ -63,6 +62,12 @@ const addPlanet = (/** @type {Vector} */ position) => {
     addDomNode()
 }
 
+const removePlanet = (/** @type {number} */ i) => {
+    planets.splice(i, 1)
+    const [removedNode] = domNodes.splice(i, 1)
+    document.body.removeChild(removedNode)
+}
+
 const debugToggle = document.querySelector("summary")
 if (!debugToggle) throw new Error()
 
@@ -82,26 +87,23 @@ const animate = (/** @type {number} */ time) => {
     const delta = (time - prevTime) / 1000
     prevTime = time
 
-    for (let i = planets.length - 1; i >= 0; i--) {
+    for (let i = 0; i < planets.length; i++) {
         const p1 = planets[i]
-        if (p1 === "tombstone") {
-            planets.splice(i, 1)
-            domNodes.splice(i, 1)
-            continue
-        }
+        if (p1 === "tombstone") continue
 
         // Add the forces to velocity
         for (let j = 0; j < planets.length; j++) {
             if (i === j) continue
 
             const p2 = planets[j]
-            if (p2 === "tombstone") throw new Error("tombstone detected")
+            if (p2 === "tombstone") continue
 
             const xDelta = p2.position.x - p1.position.x
             const yDelta = p2.position.y - p1.position.y
             const distance = Math.sqrt(xDelta ** 2 + yDelta ** 2)
+            const collisionDistance = (Math.sqrt(p1.mass) + Math.sqrt(p2.mass)) / 2
 
-            if (distance <= COLLISION_DISTANCE) {
+            if (distance <= collisionDistance) {
                 // Collision detected, combine the planets' masses, velocities, and positions
                 const combinedMass = p1.mass + p2.mass
                 p1.velocity.x =
@@ -112,6 +114,7 @@ const animate = (/** @type {number} */ time) => {
                     (p1.velocity.y * p1.mass +
                         p2.velocity.y * p2.mass) /
                     combinedMass
+                p1.mass = combinedMass
                 planets[j] = "tombstone" // Mark for removal
             } else {
                 // No collision, planets influence each other via gravity
@@ -134,8 +137,15 @@ const animate = (/** @type {number} */ time) => {
         domNodes[i].style.top = `${p1.position.y}px`
         domNodes[i].style.width = `${radius}px`
         domNodes[i].style.height = `${radius}px`
+        domNodes[i].style.borderRadius = `${radius}px`
     }
 
+    for (let i = planets.length - 1; i >= 0; i--) {
+        if (planets[i] === "tombstone") {
+            removePlanet(i)
+            continue
+        }
+    }
 
     // Update DOM
     debugTime.innerHTML = time
